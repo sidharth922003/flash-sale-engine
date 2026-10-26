@@ -33,4 +33,4 @@ databases:
     plan: free
     region: oregon
     databaseName: flashsaledb
-    user: postgres
+    user: flashsale_user
