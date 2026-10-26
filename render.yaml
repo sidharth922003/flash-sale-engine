@@ -5,8 +5,8 @@ services:
   - type: web
     name: flash-sale-backend
     runtime: docker
-    dockerContext: .
-    dockerfilePath: ./backend/Dockerfile
+    dockerContext: backend
+    dockerfilePath: Dockerfile
     plan: free
     region: oregon
     envVars:
