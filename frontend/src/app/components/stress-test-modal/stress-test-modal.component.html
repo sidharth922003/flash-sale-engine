@@ -1,0 +1,109 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-content warm-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="icon">⚡</span>
+        <div>
+          <h2>High-Demand Rush Simulator</h2>
+          <p class="subtitle">Test how ticket inventory holds up when hundreds of fans buy at the same second</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="close.emit()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Configuration Controls -->
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Select Event & Ticket Tier</label>
+          <select [(ngModel)]="selectedTierId" class="input-select">
+            @for (ev of events(); track ev.id) {
+              <optgroup [label]="ev.title">
+                @for (tier of ev.ticketTiers; track tier.id) {
+                  <option [value]="tier.id">
+                    {{ tier.name }} (Available: {{ tier.availableSeats }}/{{ tier.totalSeats }})
+                  </option>
+                }
+              </optgroup>
+            }
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Number of Simultaneous Buyers</label>
+          <div class="thread-chips">
+            @for (t of [50, 100, 250, 500, 1000]; track t) {
+              <button 
+                type="button" 
+                class="chip" 
+                [class.active]="concurrentUsers === t"
+                (click)="concurrentUsers = t">
+                {{ t }} Fans
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Inventory Protection Mode</label>
+          <select [(ngModel)]="strategy" class="input-select">
+            <option value="ATOMIC_DB_CONDITIONAL">Atomic Conditional SQL (Fastest — Zero Overselling)</option>
+            <option value="PESSIMISTIC_LOCK">Pessimistic Row Locking</option>
+            <option value="STRIPED_LOCK">Striped Partitioned Lock</option>
+            <option value="OPTIMISTIC_LOCK">Optimistic Versioning Lock</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Actions Row -->
+      <div class="actions-row">
+        <button class="btn btn-secondary" (click)="resetStock()" [disabled]="isLoading()">
+          🔄 Reset Tier to 50 Seats
+        </button>
+        <button class="btn btn-primary" (click)="runTest()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            Simulating {{ concurrentUsers }} Buyers...
+          } @else {
+            ⚡ Simulate {{ concurrentUsers }} Buyers Now
+          }
+        </button>
+      </div>
+
+      <!-- Test Results Display -->
+      @if (result(); as res) {
+        <div class="result-dashboard">
+          <div class="result-banner" [class.banner-pass]="res.oversoldCount === 0" [class.banner-fail]="res.oversoldCount > 0">
+            <span class="result-icon">{{ res.oversoldCount === 0 ? '✅' : '❌' }}</span>
+            <div>
+              <h4>{{ res.statusMessage }}</h4>
+              <p>Initial Stock: {{ res.initialAvailableSeats }} | Final Stock: {{ res.finalAvailableSeats }} | Total Tickets Sold: {{ res.totalSeatsSold }}</p>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-label">Oversold Tickets</span>
+              <span class="metric-value text-emerald">{{ res.oversoldCount }}</span>
+              <span class="metric-sub">Zero Duplicate Sales</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Tickets Secured</span>
+              <span class="metric-value text-orange">{{ res.successfulReservations }}</span>
+              <span class="metric-sub">Successful Holds</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Sold Out Responses</span>
+              <span class="metric-value text-muted">{{ res.rejectedRequests }}</span>
+              <span class="metric-sub">Handled Cleanly</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Speed</span>
+              <span class="metric-value text-dark">{{ res.executionDurationMs }}ms</span>
+              <span class="metric-sub">{{ res.requestsPerSecond }} req/sec</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

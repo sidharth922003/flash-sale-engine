@@ -1,0 +1,36 @@
+services:
+  # ----------------------------------------------------
+  # Spring Boot Java 21 Backend
+  # ----------------------------------------------------
+  - type: web
+    name: flash-sale-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: flashsaledb
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: flashsaledb
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: flashsaledb
+          property: password
+      - key: PORT
+        value: 8081
+
+# ----------------------------------------------------
+# Managed Free PostgreSQL 16 Database
+# ----------------------------------------------------
+databases:
+  - name: flashsaledb
+    plan: free
+    region: oregon
+    databaseName: flashsaledb
+    user: postgres

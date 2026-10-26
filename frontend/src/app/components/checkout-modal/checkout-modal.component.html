@@ -1,0 +1,100 @@
+<div class="modal-backdrop" (click)="close.emit()">
+  <div class="modal-content warm-panel" (click)="$event.stopPropagation()">
+    @if (!confirmedOrder()) {
+      <div class="modal-header">
+        <div>
+          <h2>Complete Your Booking</h2>
+          <p class="subtitle">Your tickets are locked and held exclusively for you</p>
+        </div>
+        <button class="btn-close" (click)="cancelAndClose()">✕</button>
+      </div>
+
+      <div class="timer-banner" [class.timer-urgent]="remainingSec() < 120">
+        <span class="timer-icon">⏱️</span>
+        <div class="timer-text">
+          <span class="label">SEATS HELD FOR YOU — EXPIRES IN</span>
+          <span class="countdown">{{ formatTime(remainingSec()) }}</span>
+        </div>
+      </div>
+
+      <div class="order-summary">
+        <div class="summary-row">
+          <span class="label">Event:</span>
+          <span class="val font-semibold">{{ reservation().eventTitle }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Category:</span>
+          <span class="val">{{ reservation().tierName }}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Tickets:</span>
+          <span class="val font-semibold">{{ reservation().quantity }} Pass(es)</span>
+        </div>
+        <div class="summary-divider"></div>
+        <div class="summary-row total-row">
+          <span class="label">Total Amount:</span>
+          <span class="val total-val">₹{{ reservation().totalAmount | number:'1.2-2' }}</span>
+        </div>
+      </div>
+
+      <div class="payment-section">
+        <label class="section-label">Select Payment Method</label>
+        <div class="payment-methods">
+          <label class="payment-option">
+            <input type="radio" name="pay" [(ngModel)]="paymentMethod" value="UPI" checked>
+            <span>⚡ Instant UPI (Google Pay, PhonePe, Paytm)</span>
+          </label>
+          <label class="payment-option">
+            <input type="radio" name="pay" [(ngModel)]="paymentMethod" value="CARD">
+            <span>💳 Credit / Debit Card</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-secondary" (click)="cancelAndClose()" [disabled]="isProcessing()">
+          Release Seats
+        </button>
+        <button class="btn btn-primary" (click)="confirmPayment()" [disabled]="isProcessing() || remainingSec() <= 0">
+          @if (isProcessing()) {
+            Processing Payment...
+          } @else {
+            Pay ₹{{ reservation().totalAmount | number:'1.2-2' }} & Confirm
+          }
+        </button>
+      </div>
+    } @else {
+      <!-- Confirmed Pass State -->
+      <div class="ticket-view">
+        <div class="confirmed-badge">✨ BOOKING CONFIRMED</div>
+        <h2 class="ticket-event">{{ confirmedOrder()!.eventTitle }}</h2>
+        <p class="ticket-tier">{{ confirmedOrder()!.tierName }} — {{ confirmedOrder()!.quantity }} Ticket(s)</p>
+
+        <div class="ticket-body">
+          <div class="ticket-qr-box">
+            <div class="qr-mock">PASS</div>
+            <span class="qr-label">Official Entry Pass</span>
+          </div>
+          <div class="ticket-meta">
+            <div class="meta-item">
+              <span class="label">BOOKING ID</span>
+              <span class="val font-mono">{{ confirmedOrder()!.orderNumber }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="label">PAYMENT REFERENCE</span>
+              <span class="val font-mono">{{ confirmedOrder()!.paymentReference }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="label">TOTAL PAID</span>
+              <span class="val highlight">₹{{ confirmedOrder()!.amountPaid | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" (click)="close.emit()">
+          View More Events
+        </button>
+      </div>
+    }
+  </div>
+</div>

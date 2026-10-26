@@ -1,0 +1,132 @@
+<app-navbar (openLab)="showLabModal.set(true)" />
+
+<main class="main-container">
+  <!-- Hero Banner (Warm & Simple) -->
+  <section class="hero-banner warm-panel">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="dot-pulse"></span>
+        <span>Live Tour Drops Today</span>
+      </div>
+      <h1 class="hero-title">Experience Unforgettable Live Moments</h1>
+      <p class="hero-desc">
+        Grab official passes for major stadium tours, headline concerts, and sports events. 
+        Your selected seats are instantly locked for you so you can checkout with peace of mind.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-pill">
+          <span class="stat-icon">🎟️</span>
+          <div>
+            <span class="stat-title">100% Guaranteed</span>
+            <span class="stat-sub">Official Venue Tickets</span>
+          </div>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-icon">⚡</span>
+          <div>
+            <span class="stat-title">Instant Seat Hold</span>
+            <span class="stat-sub">10-Minute Cart Lock</span>
+          </div>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-icon">🛡️</span>
+          <div>
+            <span class="stat-title">Secure Checkout</span>
+            <span class="stat-sub">Encrypted Payment</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Header -->
+  <div class="section-header">
+    <div>
+      <h2>Trending Events Selling Fast</h2>
+      <p class="section-sub">Live seat availability updated as fans book tickets</p>
+    </div>
+    <button class="btn btn-secondary" (click)="loadEvents()" [disabled]="isLoading()">
+      <span>🔄</span> Refresh Availability
+    </button>
+  </div>
+
+  <!-- Events Grid -->
+  @if (isLoading()) {
+    <div class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading live events...</p>
+    </div>
+  } @else {
+    <div class="events-grid">
+      @for (event of events(); track event.id) {
+        <article class="event-card warm-panel">
+          <div class="card-image-wrap">
+            <img [src]="event.imageUrl" [alt]="event.title" class="event-img" />
+            <div class="image-overlay">
+              <span class="badge badge-live">🔥 Selling Fast</span>
+              <span class="city-tag">📍 {{ event.city }}</span>
+            </div>
+          </div>
+
+          <div class="card-content">
+            <h3 class="event-title">{{ event.title }}</h3>
+            <p class="event-venue">🏟️ {{ event.venue }} • {{ event.eventDate | date:'mediumDate' }}</p>
+            <p class="event-desc">{{ event.description }}</p>
+
+            <!-- Ticket Options -->
+            <div class="tiers-container">
+              <span class="tiers-title">AVAILABLE TICKETS</span>
+              @for (tier of event.ticketTiers; track tier.id) {
+                <div class="tier-card" [class.tier-soldout]="tier.availableSeats === 0">
+                  <div class="tier-top">
+                    <span class="tier-name">{{ tier.name }}</span>
+                    <span class="tier-price">₹{{ tier.price | number:'1.0-0' }}</span>
+                  </div>
+
+                  <!-- Availability Bar -->
+                  <div class="stock-progress-wrap">
+                    <div 
+                      class="stock-bar" 
+                      [style.width.%]="(tier.availableSeats / tier.totalSeats) * 100"
+                      [class.bar-low]="(tier.availableSeats / tier.totalSeats) < 0.25">
+                    </div>
+                  </div>
+
+                  <div class="tier-bottom">
+                    <span class="stock-text">
+                      @if (tier.availableSeats > 0) {
+                        <strong class="text-orange">{{ tier.availableSeats }}</strong> tickets left
+                      } @else {
+                        <strong class="text-rose">Sold Out</strong>
+                      }
+                    </span>
+
+                    <button 
+                      class="btn btn-primary btn-sm"
+                      [disabled]="tier.availableSeats === 0 || isReserving()"
+                      (click)="openReserve(tier, event)">
+                      Book Ticket
+                    </button>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</main>
+
+<!-- Modals -->
+@if (showLabModal()) {
+  <app-stress-test-modal 
+    [events]="events()" 
+    (close)="showLabModal.set(false)" />
+}
+
+@if (activeReservation(); as res) {
+  <app-checkout-modal 
+    [reservation]="res" 
+    (close)="activeReservation.set(null); loadEvents()" />
+}

@@ -1,0 +1,47 @@
+server:
+  port: ${PORT:8081}
+
+spring:
+  application:
+    name: flash-sale-engine
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flashsaledb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 10
+      idle-timeout: 30000
+      connection-timeout: 20000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Flash Sale Engine Configuration
+flashsale:
+  reservation:
+    timeout-minutes: 10
+    cleanup-interval-ms: 30000
+  rate-limit:
+    capacity: 20
+    refill-tokens-per-sec: 5
+  concurrency:
+    default-strategy: ATOMIC_DB_CONDITIONAL
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.flashsale: INFO
+    org.hibernate.SQL: WARN
