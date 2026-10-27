@@ -24,13 +24,13 @@ public class DatabaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
 
-    @Value("${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/flashsaledb}")
+    @Value("${SPRING_DATASOURCE_URL:${DATABASE_URL:jdbc:postgresql://localhost:5432/flashsaledb}}")
     private String rawUrl;
 
-    @Value("${SPRING_DATASOURCE_USERNAME:postgres}")
+    @Value("${SPRING_DATASOURCE_USERNAME:${DATABASE_USERNAME:postgres}}")
     private String rawUsername;
 
-    @Value("${SPRING_DATASOURCE_PASSWORD:postgres}")
+    @Value("${SPRING_DATASOURCE_PASSWORD:${DATABASE_PASSWORD:postgres}}")
     private String rawPassword;
 
     @Bean
