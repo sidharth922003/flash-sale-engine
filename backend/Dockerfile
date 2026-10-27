@@ -1,7 +1,7 @@
 # ----------------------------------------------------
 # Stage 1: Build the Spring Boot Application
 # ----------------------------------------------------
-FROM maven:3.9-eclipse-temurin-21-alpine AS builder
+FROM maven:3.9-eclipse-temurin-21 AS builder
 WORKDIR /app
 
 ENV MAVEN_OPTS="-Xmx350m -XX:+UseSerialGC"
@@ -14,9 +14,9 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ----------------------------------------------------
-# Stage 2: Minimal Production JRE Runtime
+# Stage 2: Production JRE Runtime (Ubuntu/glibc based)
 # ----------------------------------------------------
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
 
 # Copy jar from builder stage

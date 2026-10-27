@@ -61,17 +61,11 @@ public class DatabaseConfig {
 
                 String host = uri.getHost();
 
-                // If host is an internal Render shortname without a domain (e.g. "dpg-dbfb03qjnfac738nlrg0-a")
-                // check if it can be resolved. If not resolvable from the web service's region, expand to Oregon public domain.
-                if (host != null && !host.contains(".") && host.startsWith("dpg-")) {
-                    try {
-                        InetAddress.getByName(host);
-                        log.info("Internal Render DB host resolved successfully: {}", host);
-                    } catch (Exception e) {
-                        String publicHost = host + ".oregon-postgres.render.com";
-                        log.warn("Internal host '{}' not resolvable from current region. Expanding to public host: {}", host, publicHost);
-                        host = publicHost;
-                    }
+                // If host is a Render database shortname (e.g. "dpg-dbfb03qjnfac738nlrg0-a"),
+                // instantly route to the Oregon FQDN without blocking DNS calls or musl libc hangs.
+                if (host != null && host.startsWith("dpg-") && !host.contains(".")) {
+                    host = host + ".oregon-postgres.render.com";
+                    log.info("Render DB shortname detected. Directly mapped to FQDN: {}", host);
                 }
 
                 int port = uri.getPort() > 0 ? uri.getPort() : 5432;
