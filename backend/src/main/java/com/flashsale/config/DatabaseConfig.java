@@ -89,8 +89,8 @@ public class DatabaseConfig {
             jdbcUrl = rawUrl.startsWith("jdbc:") ? rawUrl : "jdbc:" + rawUrl;
         }
 
-        // Ensure SSL is required for remote Render PostgreSQL connections
-        if (jdbcUrl.contains(".render.com") && !jdbcUrl.contains("sslmode=")) {
+        // Ensure SSL is required for all cloud PostgreSQL connections (both internal and external)
+        if (!jdbcUrl.contains("localhost") && !jdbcUrl.contains("127.0.0.1") && !jdbcUrl.contains("sslmode=")) {
             jdbcUrl += (jdbcUrl.contains("?") ? "&" : "?") + "sslmode=require";
         }
 
