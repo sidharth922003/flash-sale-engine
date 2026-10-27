@@ -23,7 +23,8 @@ services:
           name: flashsaledb
           property: password
       - key: PORT
-        value: 8081
+        value: 10000
+    healthCheckPath: /api/v1/health
 
 # ----------------------------------------------------
 # Managed Free PostgreSQL 16 Database

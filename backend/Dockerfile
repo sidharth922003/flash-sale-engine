@@ -24,7 +24,7 @@ USER appuser
 # Copy jar from builder stage
 COPY --from=builder /app/target/*.jar app.jar
 
-ENV PORT=8081
-EXPOSE 8081
+ENV PORT=10000
+EXPOSE 10000
 
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-jar", "app.jar"]
