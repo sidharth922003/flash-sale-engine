@@ -10,12 +10,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
+import java.net.InetAddress;
 import java.net.URI;
 
 /**
  * Robust cloud PostgreSQL connection configuration (Render, Railway, Supabase).
  * Automatically intercepts cloud URIs ("postgresql://user:pass@host/db"), extracts
  * credentials, and constructs a clean PostgreSQL JDBC URL accepted by org.postgresql.Driver.
+ * Automatically resolves cross-region Render hostnames and configures non-blocking pool initialization.
  */
 @Configuration
 public class DatabaseConfig {
@@ -58,6 +60,20 @@ public class DatabaseConfig {
                 }
 
                 String host = uri.getHost();
+
+                // If host is an internal Render shortname without a domain (e.g. "dpg-dbfb03qjnfac738nlrg0-a")
+                // check if it can be resolved. If not resolvable from the web service's region, expand to Oregon public domain.
+                if (host != null && !host.contains(".") && host.startsWith("dpg-")) {
+                    try {
+                        InetAddress.getByName(host);
+                        log.info("Internal Render DB host resolved successfully: {}", host);
+                    } catch (Exception e) {
+                        String publicHost = host + ".oregon-postgres.render.com";
+                        log.warn("Internal host '{}' not resolvable from current region. Expanding to public host: {}", host, publicHost);
+                        host = publicHost;
+                    }
+                }
+
                 int port = uri.getPort() > 0 ? uri.getPort() : 5432;
                 String path = (uri.getPath() != null && !uri.getPath().isEmpty()) ? uri.getPath() : "/flashsaledb";
 
@@ -73,6 +89,11 @@ public class DatabaseConfig {
             jdbcUrl = rawUrl.startsWith("jdbc:") ? rawUrl : "jdbc:" + rawUrl;
         }
 
+        // Ensure SSL is required for remote Render PostgreSQL connections
+        if (jdbcUrl.contains(".render.com") && !jdbcUrl.contains("sslmode=")) {
+            jdbcUrl += (jdbcUrl.contains("?") ? "&" : "?") + "sslmode=require";
+        }
+
         log.info("Sanitized JDBC URL for PostgreSQL: {}", jdbcUrl);
         log.info("Configured Database Username: {}", username);
 
@@ -85,10 +106,14 @@ public class DatabaseConfig {
         // Conservative connection pooling for cloud free tiers (e.g. Render connection caps)
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
-        config.setConnectionTimeout(20000);
+        config.setConnectionTimeout(20000); // 20s timeout
         config.setIdleTimeout(30000);
         config.setMaxLifetime(1800000);
         config.setPoolName("FlashSaleHikariPool");
+
+        // Crucial: Prevent initial pool failure from killing the Spring Boot application container
+        // Allows Tomcat to bind port 10000 immediately, letting Render healthchecks pass with 200 OK
+        config.setInitializationFailTimeout(-1);
 
         return new HikariDataSource(config);
     }
